@@ -1,0 +1,51 @@
+########################################## Install Apache Kafka on ubuntu 16.04 ###############################################
+
+#!/bin/bash
+
+apt-get update
+apt-get install openjdk-8-jdk
+java -version
+apt-get install zookeeperd
+systemctl restart zookeeper
+systemctl status zookeeper
+useradd kafka -m
+passwd kafka
+adduser kafka sudo
+su kafka
+mkdir ~/kafka
+cd ~/kafka
+wget http://apachemirror.wuchna.com/kafka/2.4.0/kafka_2.11-2.4.0.tgz
+tar -xvzf kafka*.tgz --strip 1
+rm kafka*.tgz
+
+sudo nano /etc/systemd/system/kafka.service
+
+
+
+[Unit]
+Requires=zookeeper.service
+After=zookeeper.service
+
+[Service]
+User=kafka
+ExecStart=/home/kafka/kafka/bin/kafka-server-start.sh /home/kafka/kafka/config/server.properties
+ExecStop=/home/kafka/kafka/bin/kafka-server-stop.sh
+[Install]
+WantedBy=multi-user.target
+
+
+sudo systemctl daemon-reload
+sudo systemctl start kafka
+sudo systemctl status kafka
+
+#############################################################################################################################
+
+su kafka
+
+~/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic TutorialTopic
+
+echo "Hello, World" | ~/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic TutorialTopic > /dev/null
+
+~/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic TutorialTopic --from-beginning
+
+#############################################################################################################################
